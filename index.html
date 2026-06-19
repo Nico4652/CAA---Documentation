@@ -1,0 +1,1499 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Clean Architecture Analyzer - Advanced Rules & Integration Catalog
+    </title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-icon">C#</div>
+          <div class="brand-title">CA Analyzer</div>
+        </div>
+
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Search rules or keys..."
+          />
+        </div>
+
+        <nav class="nav-menu">
+          <div class="nav-section-title">Getting Started</div>
+          <li class="nav-item">
+            <a class="nav-link active" data-target="intro">Introduction</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-target="installation"
+              >Installation Guide</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-target="configuration"
+              >Configuration Reference</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-target="domain-conventions"
+              >Domain Conventions</a
+            >
+          </li>
+
+          <div class="nav-section-title">Rules Reference</div>
+          <li class="nav-item">
+            <a class="nav-link" data-target="domain-rules">Domain Rules (30)</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-target="app-rules"
+              >Application Rules (20)</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" data-target="infra-rules"
+              >Infrastructure Rules (20)</a
+            >
+          </li>
+        </nav>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <div class="breadcrumbs">
+          <span>Docs</span>
+          <span class="breadcrumb-separator">/</span>
+          <span id="breadcrumb-page" class="breadcrumb-active"
+            >Introduction</span
+          >
+        </div>
+
+        <!-- INTRODUCTION -->
+        <section id="intro" class="content-section active">
+          <span class="version-badge">Version 1.0.0</span>
+          <h1>Introduction to Clean Architecture Analyzer</h1>
+          <p>
+            <strong>Clean Architecture Analyzer</strong> is a professional
+            static code analysis toolset built on top of the Microsoft Roslyn
+            compiler API. It is designed to strictly enforce clean architecture
+            boundaries, DDD constraints, and SOLID principles in C# codebases.
+          </p>
+          <p>
+            By running directly within the compiler pipeline (as part of MSBuild
+            or IDE processes), the analyzer prevents architectural drift. In
+            large development teams, developers frequently bypass design
+            guidelines by introducing quick references to database contexts or
+            external APIs directly inside core business objects. This analyzer
+            blocks such violations at compile-time, acting as an automated
+            architectural gatekeeper.
+          </p>
+          <div class="alert alert-info">
+            <div class="alert-title">
+              💡 Why Enforce Architecture Statically?
+            </div>
+            <p>
+              Without automated checks, software architectures inevitably
+              degrade over time due to "architectural drift" — where developers
+              introduce coupling that makes testing harder and locks the
+              business logic to specific database engines or external APIs.
+              Statically analyzing references ensures that rules are respected
+              on every developer commit.
+            </p>
+          </div>
+          <h2>Key Architecture Pillars Enforced</h2>
+          <ul>
+            <li>
+              <strong>Dependency Direction</strong>: Enforces that dependencies
+              point inwards. The core Domain has zero dependencies. The
+              Application layer only depends on the Domain. Infrastructure and
+              Presentation sit at the periphery and depend on the Application.
+            </li>
+            <li>
+              <strong>Domain Isolation</strong>: Domain models (Entities, Value
+              Objects, Aggregates) must represent pure business models. They are
+              forbidden from holding connection objects, performing direct
+              database calls, or executing side-effects.
+            </li>
+            <li>
+              <strong>Encapsulation and Invariants</strong>: Objects must
+              protect their state. Properties must have private setters,
+              collections must be read-only, and state modifications should
+              occur exclusively via explicit business methods.
+            </li>
+          </ul>
+        </section>
+
+        <!-- INSTALLATION -->
+        <section id="installation" class="content-section">
+          <h1>Installation & Setup Guide</h1>
+          <p>
+            You can configure the analyzer to run locally within your projects
+            or system-wide across your IDE. For teams, project-wide integration
+            via NuGet is highly recommended to enforce the rules during
+            command-line compilation and CI/CD pipelines.
+          </p>
+
+          <h2>1. Visual Studio 2022 Integration</h2>
+          <h3>Method A: NuGet Package (Project-Level Enforcer)</h3>
+          <p>
+            Installing the analyzer via NuGet attaches it directly to the build
+            pipeline. Any architectural violation will generate a compile-time
+            warning (or error if configured) in any environment, including local
+            terminals and cloud builders.
+          </p>
+          <p>
+            Run the following command in the Package Manager Console or your
+            system shell:
+          </p>
+          <pre><code>dotnet add package CleanArchitectureAnalyzer</code></pre>
+          <p>
+            Once installed, you will see the analyzer listed under the
+            <strong>Analyzers</strong> dependency tree inside Visual Studio
+            Solution Explorer for each configured project.
+          </p>
+
+          <h3>Method B: VSIX Extension (Design-Time Enforcer)</h3>
+          <p>
+            If you want design-time warnings across all C# projects without
+            modifying the <code>.csproj</code> file, you can install the IDE
+            extension:
+          </p>
+          <ol>
+            <li>
+              Launch Visual Studio 2022 and navigate to
+              <strong>Extensions > Manage Extensions</strong>.
+            </li>
+            <li>
+              Select the <strong>Online</strong> tab and search for
+              <code>Clean Architecture Analyzer</code>.
+            </li>
+            <li>
+              Click <strong>Download</strong>. Visual Studio will queue the
+              installation.
+            </li>
+            <li>
+              Close all instances of Visual Studio. The VSIX installer will
+              start automatically to complete the setup.
+            </li>
+          </ol>
+
+          <h2>2. VS Code (Visual Studio Code) Integration</h2>
+          <p>
+            VS Code uses Roslyn analyzers dynamically through OmniSharp or the
+            C# Dev Kit. To activate the warnings:
+          </p>
+          <ol>
+            <li>Install the <strong>C# Dev Kit</strong> extension.</li>
+            <li>
+              Ensure you add the NuGet package in your project files (Method A
+              above).
+            </li>
+            <li>
+              Verify that Roslyn analyzers are enabled inside your
+              <code>settings.json</code>:
+              <pre><code>"omnisharp.enableRoslynAnalyzers": true,
+"csharp.showRoslynAnalyzers": true</code></pre>
+            </li>
+            <li>
+              Restart the C# Language Server. The diagnostics will begin
+              appearing in your "Problems" panel.
+            </li>
+          </ol>
+        </section>
+
+        <!-- CONFIGURATION -->
+        <section id="configuration" class="content-section">
+          <h1>Configuration Reference</h1>
+          <p>
+            Because Clean Architecture is implemented across multiple
+            assemblies, the analyzer must identify which C# project belongs to
+            which architectural layer. It does this using the following
+            settings:
+          </p>
+
+          <h2>1. Setting Up .editorconfig (Recommended)</h2>
+          <p>
+            The most reliable method is to create an
+            <code>.editorconfig</code> file at the root of your solution. Add
+            global options that explicitly define the assembly names for each
+            layer. The analyzer reads these settings during compilation:
+          </p>
+          <pre><code>is_global = true
+
+# Define assembly name rules (matches exact name or prefix matches)
+cleanarchitecture_domain_assembly = MyCompany.ProjectName.Domain
+cleanarchitecture_application_assembly = MyCompany.ProjectName.Application
+cleanarchitecture_infrastructure_assembly = MyCompany.ProjectName.Infrastructure</code></pre>
+          <p>
+            By using this configuration, even if you split your layers across
+            multiple projects (e.g.,
+            <code>MyCompany.ProjectName.Domain.Core</code> and
+            <code>MyCompany.ProjectName.Domain.Events</code>), the suffix
+            matching will group them under the correct layer constraints.
+          </p>
+
+          <h2>2. Naming Conventions (Fallback)</h2>
+          <p>
+            If no <code>.editorconfig</code> configuration is detected at
+            compilation time, the analyzer falls back to convention-based
+            assembly matching. It inspects the assembly name and groups projects
+            based on their suffix:
+          </p>
+          <ul>
+            <li>
+              <strong>Domain</strong>: Assembly names ending with
+              <code>.Domain</code> or exactly named <code>Domain</code>.
+            </li>
+            <li>
+              <strong>Application</strong>: Assembly names ending with
+              <code>.Application</code> or exactly named
+              <code>Application</code>.
+            </li>
+            <li>
+              <strong>Infrastructure</strong>: Assembly names ending with
+              <code>.Infrastructure</code> or exactly named
+              <code>Infrastructure</code>.
+            </li>
+          </ul>
+          <div class="alert alert-warning">
+            <div class="alert-title">⚠️ Warning on Naming</div>
+            <p>
+              If your project names do not follow the standard suffixes (e.g.,
+              <code>MyCompany.BusinessLogic</code> instead of
+              <code>MyCompany.Domain</code>) and you do not configure an
+              <code>.editorconfig</code>, the analyzer will not execute layer
+              checks on those assemblies.
+            </p>
+          </div>
+        </section>
+
+        <!-- DOMAIN CONVENTIONS -->
+        <section id="domain-conventions" class="content-section">
+          <h1>Domain Conventions & Suffix Matching</h1>
+          <p>
+            Inside the Domain layer, DDD rules apply differently depending on
+            whether a class is an Entity, a Value Object, an Aggregate Root, a
+            Domain Service, or a Domain Event. The analyzer evaluates the C#
+            type tree and classifies symbols based on standard naming suffixes
+            and namespace structures:
+          </p>
+          <h2>Matching Suffix Rules</h2>
+          <p>
+            The type classification is resolved using the class name structure:
+          </p>
+          <ul>
+            <li>
+              <strong>Entity</strong>: Detected if the class name ends with
+              <code>Entity</code> (e.g., <code>CustomerEntity</code>,
+              <code>OrderEntity</code>).
+            </li>
+            <li>
+              <strong>Value Object</strong>: Detected if the class name ends
+              with <code>Object</code> (e.g., <code>MoneyObject</code>,
+              <code>AddressObject</code>).
+            </li>
+            <li>
+              <strong>Aggregate Root</strong>: Detected if the class name ends
+              with <code>Root</code> (e.g., <code>OrderRoot</code>,
+              <code>InventoryRoot</code>).
+            </li>
+            <li>
+              <strong>Domain Service</strong>: Detected if the class name ends
+              with <code>Service</code> (e.g., <code>DiscountService</code>,
+              <code>TaxCalculationService</code>).
+            </li>
+            <li>
+              <strong>Domain Event</strong>: Detected if the class name ends
+              with <code>Event</code> (e.g., <code>OrderShippedEvent</code>) or
+              if the class is located inside a namespace ending with
+              <code>.Events</code> or <code>.Event</code>.
+            </li>
+          </ul>
+          <div class="alert alert-info">
+            <div class="alert-title">💡 DDD Architectural Tip</div>
+            <p>
+              Always name your Domain types strictly according to their role. An
+              incorrectly named Value Object (e.g., named
+              <code>AddressInfo</code> instead of <code>AddressObject</code>)
+              will bypass Value Object-specific checks like immutability audits.
+            </p>
+          </div>
+        </section>
+
+        <!-- DOMAIN RULES -->
+        <section id="domain-rules" class="content-section">
+          <h1>Domain Layer Rules Reference (30 Rules)</h1>
+          <p>
+            The Domain layer represents the core business capabilities. It must
+            remain pure, highly testable, and completely decoupled from
+            technical frameworks.
+          </p>
+
+          <!-- CAA0001 -->
+          <div class="rule-card" data-rule-id="CAA0001">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0001</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain elements depends on External Classes
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Domain elements must have no
+              dependencies on outer frameworks or libraries. Referencing
+              external classes directly makes domain logic rigid and dependent
+              on outer implementation details. <br /><br />
+              <strong>Violation</strong>: Triggered when a field, property, or
+              return type inside a Domain class references a type outside of the
+              Domain project or System libraries.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">OrderEntity</span>
+{
+    <span class="cs-cm">// Bad: Direct dependency on EF Core Context</span>
+    <span class="cs-kw">private</span> <span class="cs-ty">SQLServerContext</span> _context;
+}</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">OrderEntity</span>
+{
+    <span class="cs-cm">// Good: Pure encapsulation</span>
+    <span class="cs-kw">private</span> <span class="cs-kw">readonly</span> <span class="cs-ty">Guid</span> _id;
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA0002 -->
+          <div class="rule-card" data-rule-id="CAA0002">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0002</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain elements must not contain dependency injection in
+              constructor
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Business entities should be
+              constructed using their initial state (e.g., ID, name, items).
+              Injecting services inside entities hides side-effects and prevents
+              unit testing in isolation. <br /><br />
+              <strong>Violation</strong>: Triggered when any constructor inside
+              a Domain class accepts a parameter whose type is classified as
+              external or service-oriented.
+            </div>
+          </div>
+
+          <!-- CAA0003 -->
+          <div class="rule-card" data-rule-id="CAA0003">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0003</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain elements should not expose collections as List&lt;T&gt;
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Exposing
+              <code>List&lt;T&gt;</code> allows external layers to add or clear
+              items directly, bypassing the domain entity's invariant logic.
+              <br /><br />
+              <strong>Violation</strong>: Exposing a public property of type
+              <code>List&lt;T&gt;</code>, <code>ICollection&lt;T&gt;</code>, or
+              <code>IEnumerable&lt;T&gt;</code> that has public setters.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">OrderEntity</span>
+{
+    <span class="cs-kw">public</span> <span class="cs-ty">List&lt;OrderItem&gt;</span> Items { <span class="cs-kw">get</span>; }
+}</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">OrderEntity</span>
+{
+    <span class="cs-kw">private</span> <span class="cs-kw">readonly</span> <span class="cs-ty">List&lt;OrderItem&gt;</span> _items;
+    <span class="cs-kw">public</span> <span class="cs-ty">IReadOnlyCollection&lt;OrderItem&gt;</span> Items => _items.AsReadOnly();
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA0004 -->
+          <div class="rule-card" data-rule-id="CAA0004">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0004</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain elements should not depend on external interfaces
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Implementing external contracts
+              couples the Domain to outer structures, making changes difficult.
+              <br /><br />
+              <strong>Violation</strong>: Implementing interfaces originating
+              from Infrastructure or Application layers.
+            </div>
+          </div>
+
+          <!-- CAA0005 -->
+          <div class="rule-card" data-rule-id="CAA0005">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0005</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              The entity should not expose public builders without parameters
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Forcing constructors to accept
+              parameters guarantees that the Entity is initialized in a valid
+              state. Parameterless constructors should be non-public.
+              <br /><br />
+              <strong>Violation</strong>: Declaring a public parameterless
+              constructor on an entity.
+            </div>
+          </div>
+
+          <!-- CAA0006 -->
+          <div class="rule-card" data-rule-id="CAA0006">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0006</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Entities should not expose public constructors accepting an ID
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Entity identities should be generated
+              internally (or via DDD factories) to prevent breaking uniqueness
+              invariants. <br /><br />
+              <strong>Violation</strong>: Public constructor accepting a
+              parameter of type <code>Guid</code> or named with the suffix
+              <code>Id</code>.
+            </div>
+          </div>
+
+          <!-- CAA0007 -->
+          <div class="rule-card" data-rule-id="CAA0007">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0007</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain event handlers should not be placed in the Domain layer
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Domain event handling involves
+              cross-cutting concerns (DB updates, notifications, external APIs).
+              They must reside in Application/Infrastructure. <br /><br />
+              <strong>Violation</strong>: Declaring a class implementing event
+              handler interfaces (e.g., <code>INotificationHandler</code>) in
+              Domain.
+            </div>
+          </div>
+
+          <!-- CAA0101 -->
+          <div class="rule-card" data-rule-id="CAA0101">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0101</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Possible Anemic Entity</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: OOP requires grouping data and
+              behaviors. Anemic entities are simply database tables in memory,
+              which leads to procedural code. <br /><br />
+              <strong>Violation</strong>: Defining an entity with 4 or more
+              properties but 0 business methods.
+            </div>
+          </div>
+
+          <!-- CAA0102 -->
+          <div class="rule-card" data-rule-id="CAA0102">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0102</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Entity with Public Setters</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Public setters allow external code to
+              bypass state validation logic, leading to invalid states.
+              <br /><br />
+              <strong>Violation</strong>: Declaring properties on an Entity with
+              public set accessors.
+            </div>
+          </div>
+
+          <!-- CAA0103 -->
+          <div class="rule-card" data-rule-id="CAA0103">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0103</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Entity should have an Id</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: By definition, entities have an
+              identity. <br /><br />
+              <strong>Violation</strong>: An Entity class missing an
+              <code>Id</code> property.
+            </div>
+          </div>
+
+          <!-- CAA0201 -->
+          <div class="rule-card" data-rule-id="CAA0201">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0201</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Value object should be immutable</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Value Objects must represent static
+              values. State modifications are achieved by instantiating new
+              objects, ensuring thread safety and preventing bugs. <br /><br />
+              <strong>Violation</strong>: Defining mutable properties on a Value
+              Object class.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">AddressObject</span>
+{
+    <span class="cs-kw">public string</span> City { <span class="cs-kw">get</span>; <span class="cs-kw">set</span>; }
+}</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">AddressObject</span>
+{
+    <span class="cs-kw">public string</span> City { <span class="cs-kw">get</span>; }
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA0202 - CAA0207 -->
+          <div class="rule-card" data-rule-id="CAA0202">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0202</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Value object must not have an ID</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Value Objects are identified solely by
+              their attributes, not an ID. Adding an ID turns the object into an
+              Entity.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0203">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0203</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Value object should implement value equality
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Direct comparison must evaluate
+              attribute equality, not memory references. <br /><br />
+              <strong>Violation</strong>: Missing <code>Equals</code> and
+              <code>GetHashCode</code> overrides.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0204">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0204</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Value object should not contain collections
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Value objects should be simple
+              structures and should not contain lists of mutable objects.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0205">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0205</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Value objects must implement IEquatable&lt;T&gt;
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Reduces performance overhead during
+              comparison by avoiding boxing.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0206">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0206</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Value object collections must be ReadOnly
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Exposes read-only collections to
+              enforce immutability constraints.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0207">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0207</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Value object must not reference entities or aggregate roots
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Prevents holding references to objects
+              with mutable lifecycles.
+            </div>
+          </div>
+
+          <!-- CAA0301 - CAA0303 -->
+          <div class="rule-card" data-rule-id="CAA0301">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0301</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Aggregate root cannot have properties of a type other than
+              aggregate root
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Aggregates represent transactional
+              boundaries. Direct referencing violates aggregate autonomy.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0302">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0302</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain events should only be raised by Aggregate Roots
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: To maintain consistency, child
+              entities should delegate event registrations to their parent
+              Aggregate Root.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0303">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0303</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Aggregate roots should use Factory methods instead of public
+              constructors
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Restricts creation to explicit
+              factories, ensuring invariants are satisfied during instantiation.
+            </div>
+          </div>
+
+          <!-- CAA0401 - CAA0406 -->
+          <div class="rule-card" data-rule-id="CAA0401">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0401</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Domain services should be stateless</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Domain services represent operations
+              and must be stateless to guarantee concurrent safety.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0402">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0402</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain services should not expose mutable properties
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Prevents storing mutable state within
+              operational domain service instances.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0403">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0403</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain services should implement at least one interface
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Facilitates mockability in unit
+              testing and supports dependency injection registration.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0404">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0404</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain services should not be static classes
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Enforces object-oriented design and
+              decouples logic from static references.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0405">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0405</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain service methods must not accept or return DTOs or
+              ViewModels
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Exposing DTO contracts inside Domain
+              services leaks external API or UI layouts into the pure Domain.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">public</span> <span class="cs-ty">UserDto</span> GetUser(<span class="cs-ty">UserRequest</span> req);</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">public</span> <span class="cs-ty">UserEntity</span> GetUser(<span class="cs-ty">Guid</span> userId);</code></pre>
+              </div>
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0406">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0406</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain services must not depend on concrete repository
+              implementations
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Concrete repositories link the service
+              directly to database frameworks. Inject abstractions instead.
+            </div>
+          </div>
+
+          <!-- CAA0501 - CAA0505 -->
+          <div class="rule-card" data-rule-id="CAA0501">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0501</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Domain events must be immutable</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Domain Events represent past events.
+              Past facts cannot be modified.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0502">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0502</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain events must contain a timestamp property
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Knowing when an event occurred is
+              critical for debugging, logs, and event sourcing.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0503">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0503</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain events must not reference mutable entities or aggregate
+              roots directly
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Events are serializable. Referencing
+              full entity objects causes cycle dependency errors.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0504">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0504</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain events should not contain business logic methods
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Events are data records. Logic
+              operations belong in Services or Use Cases.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA0505">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA0505</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Domain events should end with Event or be named in the past tense
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Clearly identifies that the class
+              represents a historical fact.
+            </div>
+          </div>
+        </section>
+
+        <!-- APPLICATION LAYER RULES -->
+        <section id="app-rules" class="content-section">
+          <h1>Application Layer Rules Reference (20 Rules)</h1>
+          <p>
+            The Application layer defines the use cases. It acts as an
+            orchestrator, dispatching requests and coordinating business models.
+          </p>
+
+          <!-- CAA1001 -->
+          <div class="rule-card" data-rule-id="CAA1001">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1001</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Application layer must not reference Infrastructure
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Referencing concrete persistence
+              classes couples Application to specific DB servers. <br /><br />
+              <strong>Violation</strong>: Declaring a field or method parameter
+              of an Infrastructure type inside Application classes.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">using</span> MyProject.Infrastructure;
+<span class="cs-kw">public class</span> <span class="cs-ty">Service</span> { <span class="cs-ty">SQLRepository</span> _repo; }</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">using</span> MyProject.Application.Interfaces;
+<span class="cs-kw">public class</span> <span class="cs-ty">Service</span> { <span class="cs-ty">IOrderRepository</span> _repo; }</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA1002 - CAA1020 -->
+          <div class="rule-card" data-rule-id="CAA1002">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1002</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Application layer must not reference Presentation
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Application must remain agnostic of
+              delivery mechanisms (e.g. Web API, MVC Controllers).
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1003">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1003</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Use case request must be immutable</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Request payloads must not mutate
+              mid-flight. Read-only properties guarantee thread-safety.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">CreateCommand</span> { <span class="cs-kw">public string</span> Name { <span class="cs-kw">get</span>; <span class="cs-kw">set</span>; } }</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">CreateCommand</span> { <span class="cs-kw">public string</span> Name { <span class="cs-kw">get</span>; } }</code></pre>
+              </div>
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1004">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1004</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Use case handler should not expose public properties or fields
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Handlers are executor objects.
+              Exposing public fields invites external state tampering.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1005">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1005</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Use case output must not expose Domain Entities or Aggregate Roots
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Returning entities directly couples
+              outer clients to the domain model structure. Map entity outputs to
+              DTOs.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1006">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1006</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Use case input must not accept Domain Entities or Aggregate Roots
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Direct parameter mapping causes API
+              clients to send entity models, exposing Domain internals.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1007">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1007</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Application services must be stateless</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Application service models coordinate
+              processes. Holding states causes concurrent errors.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1008">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1008</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Validators must reside in the Application layer
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Application validators validate
+              request models before use case execution.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1009">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1009</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Application exceptions should be sealed
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Prevents inheritance and supports
+              clean exception management.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1010">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1010</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              CQRS Commands should not contain business logic or behavior
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Commands carry action data. Processing
+              belongs strictly in Handlers.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1011">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1011</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              CQRS Queries should not contain business logic or behavior
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Queries retrieve data. Business checks
+              belong in Domain.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1012">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1012</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Application layer should not access the file system directly
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Disk access is an Infrastructure
+              concern. Abstraction allows test mockups.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1013">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1013</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Application layer should not use DateTime.Now or DateTime.UtcNow
+              directly
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Calling system clock directly prevents
+              testing relative time calculations deterministically.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">var</span> date = <span class="cs-ty">DateTime</span>.UtcNow;</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">var</span> date = _dateTimeProvider.UtcNow;</code></pre>
+              </div>
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1014">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1014</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Command name should start with a verb</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Commands represent direct requests.
+              Start names with verbs (e.g. <code>CreateOrder</code>).
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1015">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1015</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Query name should end with Query or start with
+              Get/Find/List/Search
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Enforces uniform naming to distinguish
+              read queries from write actions.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1016">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1016</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Do not use Task.Delay or Thread.Sleep inside Use Cases
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Hardcoded delays block thread
+              execution, causing throughput issues.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1017">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1017</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Use case handlers must not contain empty catch blocks
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Empty catch statements swallow
+              diagnostics, hiding programming bugs.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1018">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1018</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              DTO classes should not contain behavior/business logic methods
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: DTOs must carry data, not operations.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1019">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1019</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Application layer must not reference third-party SDK clients
+              directly
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Direct referencing creates tight
+              coupling to external vendors (e.g. Stripe, SendGrid).
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA1020">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA1020</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Use case handlers should be sealed</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Use Case Handlers are leaf nodes
+              representing execution paths and should not be extended.
+            </div>
+          </div>
+        </section>
+
+        <!-- INFRASTRUCTURE LAYER RULES -->
+        <section id="infra-rules" class="content-section">
+          <h1>Infrastructure Layer Rules Reference (20 Rules)</h1>
+          <p>
+            The Infrastructure layer contains technology implementation details,
+            database contexts, file handlers, and mail servers.
+          </p>
+
+          <!-- CAA2002 -->
+          <div class="rule-card" data-rule-id="CAA2002">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2002</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Infrastructure implementation classes should be sealed
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Restricts class extension, protecting
+              technical configurations from unexpected changes.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-kw">public class</span> <span class="cs-ty">SQLServerService</span> : <span class="cs-ty">IService</span>
+{
+}</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-kw">public sealed class</span> <span class="cs-ty">SQLServerService</span> : <span class="cs-ty">IService</span>
+{
+}</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA2003 -->
+          <div class="rule-card" data-rule-id="CAA2003">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2003</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              DbContext or DbConnection must not be exposed
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Keeps database details private to
+              Infrastructure. Exposing DbContext allows other layers to query DB
+              tables directly.
+            </div>
+          </div>
+
+          <!-- CAA2012 -->
+          <div class="rule-card" data-rule-id="CAA2012">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2012</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">Use ILogger instead of System.Console</div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Console outputs cannot be structured,
+              redirected, or filtered easily in production environments.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code><span class="cs-ty">Console</span>.WriteLine(<span class="cs-st">"Error occurred"</span>);</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code>_logger.LogError(<span class="cs-st">"Error occurred"</span>);</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA2018 -->
+          <div class="rule-card" data-rule-id="CAA2018">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2018</span>
+              <span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Repositories should not save or commit transactions internally
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Calling
+              <code>SaveChanges</code> inside repositories commits database
+              transactions prematurely. Delegate it to Unit of Work.
+            </div>
+            <div class="code-compare">
+              <div class="code-box bad">
+                <div class="code-box-header">❌ Bad</div>
+                <pre><code>_context.SaveChanges();</code></pre>
+              </div>
+              <div class="code-box good">
+                <div class="code-box-header">✔️ Good</div>
+                <pre><code><span class="cs-cm">// Delegated to Unit of Work</span></code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- CAA2001 - CAA2020 remaining -->
+          <div class="rule-card" data-rule-id="CAA2001">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2001</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Infrastructure classes must not contain core business logic
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Limits responsibilities.
+              Infrastructure classes should only contain adapter logic.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2004">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2004</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Repositories must be internal or sealed
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Restricts access to concrete DB query
+              operations, ensuring code uses interfaces.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2005">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2005</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Database entities/persistence models must not be exposed outside
+              Infrastructure
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Database models are mapped to database
+              structures. Exposing them couples outer projects to database
+              schemas.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2006">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2006</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Avoid raw/interpolated SQL strings in Infrastructure without
+              parametrization
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Using raw non-parameterized SQL
+              statements creates vulnerabilities to SQL Injection.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2007">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2007</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Repositories should not perform business validation
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Ensures repository operations focus
+              strictly on data persistence.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2008">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2008</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              HTTP Clients and External API calls must only reside in
+              Infrastructure
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: External API network requests are
+              integration details and belong in Infrastructure.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2009">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2009</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Infrastructure services must be thread-safe
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Singleton or scoped service instances
+              must remain stateless to prevent threading anomalies.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2010">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2010</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Connection strings or API secrets must not be hardcoded
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Hardcoding connection credentials
+              causes severe security vulnerabilities. Use configuration
+              providers.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2011">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2011</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              DbContext classes should inject DbContextOptions
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Enables configuring connection strings
+              dynamically during DI registration.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2013">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2013</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Classes with Repository suffix must implement a repository
+              interface
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Enforces Dependency Inversion,
+              decoupling code from concrete repository classes.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2014">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2014</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Infrastructure classes should have recognized suffixes
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Suffix identifiers (e.g.
+              <code>Repository</code>, <code>Adapter</code>) ensure clean
+              architectural roles.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2015">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2015</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Migrations must not be in Domain or Application layers
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Database schema versions are
+              persistence details and belong in Infrastructure.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2016">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2016</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Infrastructure services must not expose parameterless constructors
+              if dependencies exist
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Forces client code to use dependency
+              injection, preventing uninitialized states.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2017">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2017</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              EF Core queries in read repositories should use AsNoTracking
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Disabling change tracking improves
+              execution performance on read queries.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2019">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2019</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Infrastructure classes must not implement Domain Event or Entity
+              interfaces directly
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Infrastructure elements represent
+              technology details, not business domain entities.
+            </div>
+          </div>
+          <div class="rule-card" data-rule-id="CAA2020">
+            <div class="rule-card-header">
+              <span class="rule-id">CAA2020</span
+              ><span class="rule-severity severity-warning">Warning</span>
+            </div>
+            <div class="rule-title">
+              Database and I/O operations should be asynchronous
+            </div>
+            <div class="rule-desc">
+              <strong>Rationale</strong>: Asynchronous execution prevents
+              blocking thread pools, maximizing backend throughput.
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
