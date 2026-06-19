@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const breadcrumbPage = document.getElementById('breadcrumb-page');
     const searchInput = document.getElementById('search-input');
     const ruleCards = document.querySelectorAll('.rule-card');
+    
+    // Mobile Navigation Elements
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
 
     function navigateTo(targetId) {
         // Hide all sections
@@ -16,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
             targetSection.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        // Close mobile menu if open
+        if (sidebar) sidebar.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
 
         // Update active states in navigation
         navLinks.forEach(link => {
@@ -68,6 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     link.style.display = 'none';
                 }
             });
+        });
+    }
+
+    // Toggle mobile sidebar
+    if (menuToggle && sidebar && overlay) {
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
         });
     }
 
